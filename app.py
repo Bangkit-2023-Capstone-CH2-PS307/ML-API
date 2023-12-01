@@ -92,11 +92,11 @@ def preiction():
             print(preds)
             
             return jsonify({
-                "status": {
-                    "code": 200,
-                    "message": "File uploaded and saved successfully",
-                },
-                "data": {"filename": filename}
+                "status": 200,
+                "message": "File uploaded and saved successfully",
+                "data": {
+                    "prediction": preds
+                }
             }), 200
         else:
             return jsonify({
@@ -116,4 +116,4 @@ def preiction():
         }),405
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0', port=8080, debug=True)
