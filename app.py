@@ -95,7 +95,8 @@ def preiction():
                 "status": 200,
                 "message": "File uploaded and saved successfully",
                 "data": {
-                    "prediction": preds
+                    "prediction": preds,
+                    "image_url": f"/{app.config['UPLOAD_FOLDER']}/{filename}"
                 }
             }), 200
         else:
