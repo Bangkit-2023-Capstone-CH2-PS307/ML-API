@@ -1,0 +1,52 @@
+name: Build and Deploy ML to Cloud Run
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: ${{ secrets.PROJECT_ID }}
+  SERVICE: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+  REGION: ${{ secrets.REGION }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Authenticate with Google Cloud
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      # Setup gcloud CLI/SDK
+      - name: Set Up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
+      # Build and Deploy
+      - name: Authorize Docker Push
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and Push Container
+        run: |-
+          docker build -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}-image:${{ github.sha }}" ./
+          docker push "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}-image:${{ github.sha }}"
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |-
+          gcloud run deploy ${{ env.SERVICE }} \
+          --region ${{ env.REGION }} \
+          --image "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}-image:${{ github.sha }}" \
+          --memory 128Mi \
+          --max-instances 2 \
+          --allow-unauthenticated
+
+      # If required, use the Cloud Run url output in later steps
+      - name: Show Output
+        run: echo ${{ steps.deploy.outputs.url }}
