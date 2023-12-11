@@ -1,3 +1,5 @@
+mobilenetV2.h5
+recipes.csv
 __pycache__/
 *.py[cod]
 *$py.class
