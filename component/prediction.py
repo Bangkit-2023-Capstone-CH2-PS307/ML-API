@@ -14,7 +14,7 @@ import hashlib
 
 # Create Flask application
 app = Flask(__name__)
-
+    
 # Configuration settings for the Flask app
 app.config["ALLOWED_EXTENSIONS"] = set(['png', 'jpg', 'jpeg'])
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
