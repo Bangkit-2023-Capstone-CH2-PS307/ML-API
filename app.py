@@ -1,5 +1,4 @@
 from flask import Flask
-from component import app
 from component.form import form_routes
 # from component.prediction import prediction_routes
 

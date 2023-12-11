@@ -87,9 +87,14 @@ def form_prediction():
 
     return "Received and processed the data successfully!" 
 
-# Convert DataFrame to JSON format with 'records' orientation
-    # output=output.to_json()
-    # # Save the JSON data to a file
-    # with open('output', 'w') as file:
-    #     file.write(output)
-    # return "Received and processed the data successfully!"  # You can customize the response
+@form_routes.route("/form_results", methods=["GET"])
+def get_results():
+    try:
+        # Read the data from the 'output.json' file
+        with open('output.json', 'r') as file:
+            data = json.load(file)
+
+        return jsonify(data)
+    except FileNotFoundError:
+        return jsonify({"error": "Output data not found"}), 404
+
