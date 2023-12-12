@@ -93,8 +93,45 @@ def get_results():
         # Read the data from the 'output.json' file
         with open('output.json', 'r') as file:
             data = json.load(file)
+        
+        # Make structur json file
+        results = [
+            {
+                "RecipeId": entry["RecipeId"],
+                "Name": entry["Name"],
+                "Author": {
+                    "AuthorId": entry.get("AuthorId", None),
+                    "AuthorName": entry.get("AuthorName", None)
+                },
+                "CookTime": entry.get("CookTime", None),
+                "PrepTime": entry.get("PrepTime", None),
+                "TotalTime": entry.get("TotalTime", None),
+                "DatePublished": entry.get("DatePublished", None),
+                "Description": entry.get("Description", None),
+                "Images": entry.get("Images", None),
+                "RecipeCategory": entry.get("RecipeCategory", None),
+                "Keywords": entry.get("Keywords", []),
+                "RecipeIngredientParts": entry.get("RecipeIngredientParts", []).split(', ') if entry.get("RecipeIngredientParts") else [],
+                "RecipeIngredientQuantities": entry.get("RecipeIngredientQuantities", []).split(', ') if entry.get("RecipeIngredientQuantities") else [],
+                "AggregatedRating": entry.get("AggregatedRating", None),
+                "ReviewCount": entry.get("ReviewCount", None),
+                "Calories": entry.get("Calories", None),
+                "FatContent": entry.get("FatContent", None),
+                "SaturatedFatContent": entry.get("SaturatedFatContent", None),
+                "CholesterolContent": entry.get("CholesterolContent", None),
+                "SodiumContent": entry.get("SodiumContent", None),
+                "CarbohydrateContent": entry.get("CarbohydrateContent", None),
+                "FiberContent": entry.get("FiberContent", None),
+                "SugarContent": entry.get("SugarContent", None),
+                "ProteinContent": entry.get("ProteinContent", None),
+                "RecipeServings": entry.get("RecipeServings", None),
+                "RecipeYield": entry.get("RecipeYield", None),
+                "RecipeInstructions": entry.get("RecipeInstructions", []).split(', ') if entry.get("RecipeInstructions") else [],
+            }
+            for entry in data.values()
+        ]
 
-        return jsonify(data)
+        return jsonify(results)
     except FileNotFoundError:
         return jsonify({"error": "Output data not found"}), 404
 
