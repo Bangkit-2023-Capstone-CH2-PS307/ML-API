@@ -110,9 +110,9 @@ def get_results():
                 "Description": entry.get("Description", None),
                 "Images": entry.get("Images", None),
                 "RecipeCategory": entry.get("RecipeCategory", None),
-                "Keywords": entry.get("Keywords", []),
-                "RecipeIngredientParts": entry.get("RecipeIngredientParts", []).split(', ') if entry.get("RecipeIngredientParts") else [],
-                "RecipeIngredientQuantities": entry.get("RecipeIngredientQuantities", []).split(', ') if entry.get("RecipeIngredientQuantities") else [],
+                "Keywords": [f'c("{keyword.strip()}")' for keyword in str(entry.get("Keywords", "")).split(',') if entry.get("Keywords")],
+                "RecipeIngredientParts": list({"c(\"" + entry_part.strip().lstrip('c("').rstrip('""') + '")' for entry_part in entry.get("RecipeIngredientParts", "").split(',') if entry.get("RecipeIngredientParts")}),
+                "RecipeIngredientQuantities": [f'c("{quantity.strip()}")' for quantity in entry.get("RecipeIngredientQuantities", "").split(',') if entry.get("RecipeIngredientQuantities")],
                 "AggregatedRating": entry.get("AggregatedRating", None),
                 "ReviewCount": entry.get("ReviewCount", None),
                 "Calories": entry.get("Calories", None),
@@ -126,7 +126,7 @@ def get_results():
                 "ProteinContent": entry.get("ProteinContent", None),
                 "RecipeServings": entry.get("RecipeServings", None),
                 "RecipeYield": entry.get("RecipeYield", None),
-                "RecipeInstructions": entry.get("RecipeInstructions", []).split(', ') if entry.get("RecipeInstructions") else [],
+                "RecipeInstructions": [f'c("{instruction.strip()}")' for instruction in entry.get("RecipeInstructions", "").split(',') if entry.get("RecipeInstructions")],
             }
             for entry in data.values()
         ]
