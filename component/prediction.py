@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, Flask
 import numpy as np
-import pandas as pd
 from werkzeug.utils import secure_filename
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
@@ -11,14 +10,18 @@ import os
 from PIL import Image
 import time
 import hashlib
+from google.cloud import firestore
 
 # Create Flask application
 app = Flask(__name__)
-    
+
 # Configuration settings for the Flask app
 app.config["ALLOWED_EXTENSIONS"] = set(['png', 'jpg', 'jpeg'])
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MODEL_FILE'] = 'mobilenetV2.h5'
+
+# Initialize Firestore client
+db = firestore.Client()
 
 prediction_routes = Blueprint('prediction_routes', __name__)
 
@@ -26,29 +29,20 @@ def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
-# Hash agar setiap foto yang di up namanya beda
 def generate_unique_filename(original_filename):
     timestamp = str(int(time.time()))
     hash_object = hashlib.md5(original_filename.encode())
     unique_hash = hash_object.hexdigest()[:8]
     return f"{timestamp}_{unique_hash}_{original_filename}"
 
-# Load model with label
 model = load_model(app.config['MODEL_FILE'], compile=False)
-
-
-# Define the custom_objects dictionary
 custom_objects = {'F1Score': F1Score}
-
-# Load the model with custom_objects
 model = tf.keras.models.load_model('mobilenetV2.h5', custom_objects=custom_objects)
-
-# Now, you can use the 'model' object to make predictions or perform other operations.
 
 with open('class_indices_food_detection.pkl', 'rb') as indices:
     loaded_indices = pickle.load(indices)
 
-@prediction_routes.route("/prediction", methods=["GET", "POST"])
+@prediction_routes.route("/prediction", methods=["POST"])
 def prediction():
     if request.method == "POST":
         image = request.files["image"]
@@ -68,17 +62,32 @@ def prediction():
 
             image_uploads = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             prediction_nutrition = preds(image_uploads)
-            preds = preds(image_uploads)
-            print(preds)
+            print(prediction_nutrition)
+            
 
-            return jsonify({
-                "status": 200,
-                "message": "File uploaded and saved successfully",
-                "data": {
-                    "prediction": preds,
-                    "image_url": f"/{app.config['UPLOAD_FOLDER']}/{filename}"
-                }
-            }), 200
+            # Get description from Firestore based on the prediction
+            database_ref = db.collection('foods').document('Telur')
+            data = database_ref.get()
+            
+            if data.exists:
+                document_data = data.to_dict()
+
+                return jsonify({
+                    "status": 200,
+                    "message": "File uploaded and saved successfully",
+                    "data": {
+                        "prediction": prediction_nutrition,
+                        "description": document_data.get('description', ''),
+                        "nutritions": document_data.get('nutritions', ''),
+                        "percentages": document_data.get('percentages', ''),
+                        "image_url": f"/{app.config['UPLOAD_FOLDER']}/{filename}"
+                    }
+                }), 200
+            else:
+                return jsonify({
+                    "status": 404,
+                    "message": "Data not found",
+                }), 404
         else:
             return jsonify({
                 "status": {
