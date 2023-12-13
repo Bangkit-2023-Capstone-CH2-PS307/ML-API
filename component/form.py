@@ -11,7 +11,8 @@ from sklearn.pipeline import Pipeline
 
 form_routes = Blueprint('form_routes', __name__)
 
-url = './recipes.csv'
+# url = './recipes.csv'
+url = 'https://storage.googleapis.com/nutrikita-bucket/recipes.csv'
 dataset = pd.read_csv(url)
 max_Calories=2000
 max_daily_fat=100
@@ -110,9 +111,9 @@ def get_results():
                 "Description": entry.get("Description", None),
                 "Images": entry.get("Images", None),
                 "RecipeCategory": entry.get("RecipeCategory", None),
-                "Keywords": [f'c("{keyword.strip()}")' for keyword in str(entry.get("Keywords", "")).split(',') if entry.get("Keywords")],
-                "RecipeIngredientParts": list({"c(\"" + entry_part.strip().lstrip('c("').rstrip('""') + '")' for entry_part in entry.get("RecipeIngredientParts", "").split(',') if entry.get("RecipeIngredientParts")}),
-                "RecipeIngredientQuantities": [f'c("{quantity.strip()}")' for quantity in entry.get("RecipeIngredientQuantities", "").split(',') if entry.get("RecipeIngredientQuantities")],
+                "Keywords": entry.get("Keywords", []),
+                "RecipeIngredientParts": entry.get("RecipeIngredientParts", []),
+                "RecipeIngredientQuantities": entry.get("RecipeIngredientQuantities", []),
                 "AggregatedRating": entry.get("AggregatedRating", None),
                 "ReviewCount": entry.get("ReviewCount", None),
                 "Calories": entry.get("Calories", None),
@@ -126,7 +127,7 @@ def get_results():
                 "ProteinContent": entry.get("ProteinContent", None),
                 "RecipeServings": entry.get("RecipeServings", None),
                 "RecipeYield": entry.get("RecipeYield", None),
-                "RecipeInstructions": [f'c("{instruction.strip()}")' for instruction in entry.get("RecipeInstructions", "").split(',') if entry.get("RecipeInstructions")],
+                "RecipeInstructions": entry.get("RecipeInstructions", [])
             }
             for entry in data.values()
         ]
