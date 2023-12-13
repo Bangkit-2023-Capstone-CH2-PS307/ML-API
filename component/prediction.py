@@ -64,9 +64,22 @@ def prediction():
             prediction_nutrition = preds(image_uploads)
             print(prediction_nutrition)
             
-
+            label_map = {
+                'gambar agar-agar' :'Agar-Agar',
+                'bubur' : 'Bubur',
+                'cheese' : 'Cheese',
+                'daging-cincang' : 'Daging Cincang',
+                'kentang' : 'Kentang',
+                'olahan ikan' : 'Ikan',
+                'susu' : 'Susu',
+                'telur' : 'Telur',
+                'wortel' : 'Wortel',
+                'yogurt' : 'Yogurt'
+            }
+            
+            prediction_nutrition = label_map[prediction_nutrition]
             # Get description from Firestore based on the prediction
-            database_ref = db.collection('foods').document('Telur')
+            database_ref = db.collection('foods').document(prediction_nutrition)
             data = database_ref.get()
             
             if data.exists:
