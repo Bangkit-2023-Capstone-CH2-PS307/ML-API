@@ -62,7 +62,6 @@ def prediction():
 
             image_uploads = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             prediction_nutrition = preds(image_uploads)
-            print(prediction_nutrition)
             
             label_map = {
                 'gambar agar-agar' :'Agar-Agar',
