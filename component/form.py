@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 
 form_routes = Blueprint('form_routes', __name__)
 
-url = 'https://storage.googleapis.com/nutrikita-bucket/recipes_up.csv'
+url = 'https://storage.googleapis.com/nutrikita-bucket/recipes_up_clean.csv'
 dataset = pd.read_csv(url)
 max_Calories = 2000
 max_daily_fat = 100
