@@ -78,7 +78,15 @@ def form_handler():
         # Convert DataFrame to JSON format with 'records' orientation
         output_json = output.to_dict(orient='records')
 
-        # Manipulate the structure of the data to have RecipeId at the top level
-        modified_output = [{"RecipeId": entry[id_column], **entry} for entry in output_json]
+        # Remove backslashes and convert specific properties to arrays
+        for item in output_json:
+            for key, value in item.items():
+                if isinstance(value, str) and value != "NaN":
+                    item[key] = value.replace('\\', '').replace('\"', '')
 
-        return jsonify(modified_output)
+                # Convert specific properties to arrays
+                if key in ['Keywords', 'RecipeIngredientParts', 'RecipeIngredientQuantities']:
+                    if value and value != "NaN":
+                        item[key] = [x.strip().strip('"') for x in value.split(',')]
+
+        return jsonify(output_json)
