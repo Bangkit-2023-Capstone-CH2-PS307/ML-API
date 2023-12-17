@@ -27,66 +27,72 @@ max_list = [max_Calories, max_daily_fat, max_daily_Saturatedfat, max_daily_Chole
 
 @form_routes.route("/form", methods=["POST", "GET"])
 def form_handler():
-    if request.method == "POST":
-        data = request.json
-        result = data.values()
+    try:
+        if request.method == "POST":
+            data = request.json
+            result = data.values()
 
-        # Convert object to a list
-        data = list(result)
+            # Convert object to a list
+            data = list(result)
 
-        # Convert list to an array
-        numpyArray = np.array([data])
+            # Convert list to an array
+            numpyArray = np.array([data])
 
-        def scaling(dataframe):
-            scaler = StandardScaler()
-            prep_data = scaler.fit_transform(dataframe.iloc[:, 16:25].to_numpy())
-            return prep_data, scaler
+            def scaling(dataframe):
+                scaler = StandardScaler()
+                prep_data = scaler.fit_transform(dataframe.iloc[:, 16:25].to_numpy())
+                return prep_data, scaler
 
-        def nn_predictor(prep_data):
-            neigh = NearestNeighbors(metric='cosine', algorithm='brute')
-            neigh.fit(prep_data)
-            return neigh
+            def nn_predictor(prep_data):
+                neigh = NearestNeighbors(metric='cosine', algorithm='brute')
+                neigh.fit(prep_data)
+                return neigh
 
-        def build_pipeline(neigh, scaler, params):
-            transformer = FunctionTransformer(neigh.kneighbors, kw_args=params)
-            pipeline = Pipeline([('std_scaler', scaler), ('NN', transformer)])
-            return pipeline
+            def build_pipeline(neigh, scaler, params):
+                transformer = FunctionTransformer(neigh.kneighbors, kw_args=params)
+                pipeline = Pipeline([('std_scaler', scaler), ('NN', transformer)])
+                return pipeline
 
-        def extract_data(dataframe, ingredient_filter, max_nutritional_values):
-            extracted_data = dataframe.copy()
-            for column, maximum in zip(extracted_data.columns[16:25], max_nutritional_values):
-                extracted_data = extracted_data[extracted_data[column] < maximum]
-            if ingredient_filter is not None:
-                for ingredient in ingredient_filter:
-                    extracted_data = extracted_data[
-                        extracted_data['RecipeIngredientParts'].str.contains(ingredient, regex=False)]
-            return extracted_data
+            def extract_data(dataframe, ingredient_filter, max_nutritional_values):
+                extracted_data = dataframe.copy()
+                for column, maximum in zip(extracted_data.columns[16:25], max_nutritional_values):
+                    extracted_data = extracted_data[extracted_data[column] < maximum]
+                if ingredient_filter is not None:
+                    for ingredient in ingredient_filter:
+                        extracted_data = extracted_data[
+                            extracted_data['RecipeIngredientParts'].str.contains(ingredient, regex=False)]
+                return extracted_data
 
-        def apply_pipeline(pipeline, _input, extracted_data):
-            return extracted_data.iloc[pipeline.transform(_input)[0]]
+            def apply_pipeline(pipeline, _input, extracted_data):
+                return extracted_data.iloc[pipeline.transform(_input)[0]]
 
-        def recommend(dataframe, _input, max_nutritional_values, ingredient_filter=None, params={'return_distance': False}):
-            extracted_data = extract_data(dataframe, ingredient_filter, max_nutritional_values)
-            prep_data, scaler = scaling(extracted_data)
-            neigh = nn_predictor(prep_data)
-            pipeline = build_pipeline(neigh, scaler, params)
-            return apply_pipeline(pipeline, _input, extracted_data)
+            def recommend(dataframe, _input, max_nutritional_values, ingredient_filter=None, params={'return_distance': False}):
+                extracted_data = extract_data(dataframe, ingredient_filter, max_nutritional_values)
+                prep_data, scaler = scaling(extracted_data)
+                neigh = nn_predictor(prep_data)
+                pipeline = build_pipeline(neigh, scaler, params)
+                return apply_pipeline(pipeline, _input, extracted_data)
 
-        output = recommend(dataset, numpyArray, max_list)
-        id_column = 'RecipeId'
+            output = recommend(dataset, numpyArray, max_list)
+            id_column = 'RecipeId'
 
-        # Convert DataFrame to JSON format with 'records' orientation
-        output_json = output.to_dict(orient='records')
+            # Convert DataFrame to JSON format with 'records' orientation
+            output_json = output.to_dict(orient='records')
 
-        # Remove backslashes and convert specific properties to arrays
-        for item in output_json:
-            for key, value in item.items():
-                if isinstance(value, str) and value != "NaN":
-                    item[key] = value.replace('\\', '').replace('\"', '')
+            # Remove backslashes and convert specific properties to arrays
+            for item in output_json:
+                for key, value in item.items():
+                    if isinstance(value, str) and value != "NaN":
+                        item[key] = value.replace('\\', '').replace('\"', '')
 
-                # Convert specific properties to arrays
-                if key in ['Keywords', 'RecipeIngredientParts', 'RecipeIngredientQuantities']:
-                    if value and value != "NaN":
-                        item[key] = [x.strip().strip('"') for x in value.split(',')]
+                    # Convert specific properties to arrays
+                    if key in ['Keywords', 'RecipeIngredientParts', 'RecipeIngredientQuantities']:
+                        if isinstance(value, str) and value != "NaN":
+                            item[key] = [x.strip().strip('"') for x in value.split(',')]
 
-        return jsonify(output_json)
+            return jsonify(output_json)
+    except Exception as e:
+        return jsonify({
+            "status": 500,
+            "message": str(e),
+        }), 500
