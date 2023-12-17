@@ -47,63 +47,69 @@ def prediction():
     if request.method == "POST":
         image = request.files["image"]
         if image and allowed_file(image.filename):
-            filename = generate_unique_filename(secure_filename(image.filename))
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            try:
+                filename = generate_unique_filename(secure_filename(image.filename))
+                image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-            def preds(image_path):
-                image = load_img(image_path, target_size=(224, 224))
-                image = img_to_array(image)
-                image = np.expand_dims(image, axis=0)
-                image = image / 255.0
-                predictions = model.predict(image)
-                predicted_class = np.argmax(predictions, axis=1)
-                class_labels = loaded_indices
-                return list(class_labels)[predicted_class[0]]
+                def preds(image_path):
+                    image = load_img(image_path, target_size=(224, 224))
+                    image = img_to_array(image)
+                    image = np.expand_dims(image, axis=0)
+                    image = image / 255.0
+                    predictions = model.predict(image)
+                    predicted_class = np.argmax(predictions, axis=1)
+                    class_labels = loaded_indices
+                    return list(class_labels)[predicted_class[0]]
 
-            image_uploads = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            prediction_nutrition = preds(image_uploads)
-            
-            label_map = {
-                'gambar agar-agar' :'Agar-Agar',
-                'bubur' : 'Bubur',
-                'cheese' : 'Cheese',
-                'daging-cincang' : 'Daging Cincang',
-                'kentang' : 'Kentang',
-                'olahan ikan' : 'Ikan',
-                'susu' : 'Susu',
-                'telur' : 'Telur',
-                'wortel' : 'Wortel',
-                'yogurt' : 'Yogurt'
-            }
-            
-            prediction_nutrition = label_map[prediction_nutrition]
-            # Get description from Firestore based on the prediction
-            database_ref = db.collection('foods').document(prediction_nutrition)
-            data = database_ref.get()
-            
-            if data.exists:
-                document_data = data.to_dict()
+                image_uploads = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                prediction_nutrition = preds(image_uploads)
+                
+                label_map = {
+                    'gambar agar-agar' :'Agar-Agar',
+                    'bubur' : 'Bubur',
+                    'cheese' : 'Cheese',
+                    'daging-cincang' : 'Daging Cincang',
+                    'kentang' : 'Kentang',
+                    'olahan ikan' : 'Ikan',
+                    'susu' : 'Susu',
+                    'telur' : 'Telur',
+                    'wortel' : 'Wortel',
+                    'yogurt' : 'Yogurt'
+                }
+                
+                prediction_nutrition = label_map[prediction_nutrition]
+                # Get description from Firestore based on the prediction
+                database_ref = db.collection('foods').document(prediction_nutrition)
+                data = database_ref.get()
+                
+                if data.exists:
+                    document_data = data.to_dict()
 
+                    return jsonify({
+                        "status": 200,
+                        "message": "File uploaded and saved successfully",
+                        "data": {
+                            "prediction": prediction_nutrition,
+                            "description": document_data.get('description', ''),
+                            "nutritions": document_data.get('nutritions', ''),
+                            "percentages": document_data.get('percentages', ''),
+                            "image_url": f"/{app.config['UPLOAD_FOLDER']}/{filename}"
+                        }
+                    }), 200
+                else:
+                    return jsonify({
+                        "status": 404,
+                        "message": "Data not found"
+                    }), 404
+            except Exception as e:
                 return jsonify({
-                    "status": 200,
-                    "message": "File uploaded and saved successfully",
-                    "data": {
-                        "prediction": prediction_nutrition,
-                        "description": document_data.get('description', ''),
-                        "nutritions": document_data.get('nutritions', ''),
-                        "percentages": document_data.get('percentages', ''),
-                        "image_url": f"/{app.config['UPLOAD_FOLDER']}/{filename}"
-                    }
-                }), 200
-            else:
-                return jsonify({
-                    "status": 404,
-                    "message": "Data not found"
-                }), 404
+                    "status": 500,
+                    "message": str(e),
+                }), 500
         else:
             return jsonify({
                 "status": 400,
-                "message": "Client side error"
+                "message": "Incorrect format. Only accept: png, jpg, jpeg"
             }), 400
     else:
         return jsonify({
