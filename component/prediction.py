@@ -98,23 +98,17 @@ def prediction():
             else:
                 return jsonify({
                     "status": 404,
-                    "message": "Data not found",
+                    "message": "Data not found"
                 }), 404
         else:
             return jsonify({
-                "status": {
-                    "code": 400,
-                    "message": "Client side error"
-                },
-                "data": None
+                "status": 400,
+                "message": "Client side error"
             }), 400
     else:
         return jsonify({
-            "status": {
-                "code": 405,
-                "message": "Method not allowed"
-            },
-            "data": None
+            "status": 405,
+            "message": "Method not allowed"
         }), 405
 
 # Register Blueprints
