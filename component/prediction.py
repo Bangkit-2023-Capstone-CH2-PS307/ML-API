@@ -74,7 +74,8 @@ def prediction():
                     'susu' : 'Susu',
                     'telur' : 'Telur',
                     'wortel' : 'Wortel',
-                    'yogurt' : 'Yogurt'
+                    'yogurt' : 'Yogurt',
+                    'bread' : 'Roti',
                 }
 
                 prediction_nutrition = label_map[prediction_nutrition]
