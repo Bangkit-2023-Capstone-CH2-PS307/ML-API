@@ -67,8 +67,8 @@ def prediction():
                 label_map = {
                     'gambar agar-agar' :'Agar-Agar',
                     'bubur' : 'Bubur',
-                    'cheese' : 'Cheese',
-                    'daging-cincang' : 'Daging Cincang',
+                    'cheese' : 'Keju',
+                    'daging cincang' : 'Daging Cincang',
                     'kentang' : 'Kentang',
                     'olahan ikan' : 'Ikan',
                     'susu' : 'Susu',
@@ -76,7 +76,7 @@ def prediction():
                     'wortel' : 'Wortel',
                     'yogurt' : 'Yogurt'
                 }
-                
+
                 prediction_nutrition = label_map[prediction_nutrition]
                 # Get description from Firestore based on the prediction
                 database_ref = db.collection('foods').document(prediction_nutrition)
