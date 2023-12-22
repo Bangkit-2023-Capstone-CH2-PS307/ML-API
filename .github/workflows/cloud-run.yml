@@ -43,8 +43,8 @@ jobs:
           gcloud run deploy ${{ env.SERVICE }} \
           --region ${{ env.REGION }} \
           --image "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}-image:${{ github.sha }}" \
-          --memory 8Gi \
-          --cpu 2 \
+          --memory 16Gi \
+          --cpu 4 \
           --max-instances 2 \
           --allow-unauthenticated
 
